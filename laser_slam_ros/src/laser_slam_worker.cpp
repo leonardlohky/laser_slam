@@ -56,7 +56,8 @@ void LaserSlamWorker::init(
 
   if (params_.publish_local_map) {
     local_map_pub_ = nh.advertise<sensor_msgs::PointCloud2>(params_.local_map_pub_topic,
-                                                            kPublisherQueueSize);
+                                                            kPublisherQueueSize, true);
+
   }
 
   // Setup services.
@@ -249,6 +250,8 @@ void LaserSlamWorker::scanCallback(const sensor_msgs::PointCloud2& cloud_msg_in)
       ROS_WARN_STREAM("[SegMapper] Timeout while waiting between " + params_.odom_frame  +
                       " and " + params_.sensor_frame  + ".");
     }
+
+    publishMap();
   }
 }
 
@@ -353,11 +356,12 @@ void LaserSlamWorker::publishMap() {
     //      convert_to_point_cloud_2_msg(filtered_map, params_.world_frame, &msg);
     //      point_cloud_pub_.publish(msg);
     //    }
+    
     if (params_.publish_local_map) {
       sensor_msgs::PointCloud2 msg;
       {
-        std::lock_guard<std::recursive_mutex> lock(local_map_filtered_mutex_);
-        convert_to_point_cloud_2_msg(local_map_filtered_, params_.world_frame, &msg);
+        // std::lock_guard<std::recursive_mutex> lock(local_map_filtered_mutex_);
+        convert_to_point_cloud_2_msg(filtered_map, params_.world_frame, &msg);
       }
       local_map_pub_.publish(msg);
     }
@@ -478,7 +482,7 @@ void LaserSlamWorker::getFilteredMap(PointCloud* filtered_map) {
     *filtered_map += distant_map_;
 
     clock.takeTime();
-    // LOG(INFO) << "new_local_map.size() " << local_map.size();
+    LOG(INFO) << "new_local_map.size() " << local_map.size();
     // LOG(INFO) << "new_distant_map.size() " << new_distant_map.size();
     // LOG(INFO) << "distant_map_.size() " << distant_map_.size();
     // LOG(INFO) << "Separating done! Took " << clock.getRealTime() << " ms.";

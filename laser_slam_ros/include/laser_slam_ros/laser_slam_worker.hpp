@@ -35,6 +35,7 @@ class LaserSlamWorker {
 
   /// \brief Publish the map.
   void publishMap();
+  void publishLocalMap();
 
   /// \brief Publish the estimated trajectory and the odometry only based trajectory.
   void publishTrajectories();
